@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>とびひ vs ヘルペス 見分け方インタラクティブガイド</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif; }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container { height: 400px; }
+        }
+        .tab-btn.active { border-bottom: 2px solid #3b82f6; color: #1d4ed8; font-weight: bold; }
+        .hidden-section { display: none; }
+        
+        <!-- Chosen Palette: Minimalist Medical (Neutral Stone-50 background, Slate text, Orange-500 for Impetigo (とびひ), Blue-500 for Herpes (ヘルペス), Green-600 for safe/check actions) -->
+        <!-- Application Structure Plan: The SPA is structured to provide an immediate comparative overview, followed by deeper interactive exploration. 
+             1. Header & Intro: Sets the context.
+             2. Interactive Dashboard (Tabs): Allows users to switch between qualitative comparison (Text/Grid) and quantitative comparison (Radar Chart). This supports different learning styles.
+             3. Self-Check Tool: A practical, interactive step-by-step quiz that applies the knowledge to help the user evaluate a specific case.
+             4. Detailed Breakdown: Expandable sections for in-depth reading if needed. 
+             This structure starts broad, allows for interaction, and ends with actionable insights (consulting a doctor). -->
+        <!-- Visualization & Content Choices: 
+             - Goal: Compare characteristics -> Method: Side-by-side CSS Grid cards -> Interaction: Tab toggle -> Justification: Clearest way to read side-by-side textual differences.
+             - Goal: Visualize symptom profiles -> Method: Chart.js Radar Chart -> Interaction: Hover tooltips -> Justification: Effectively shows the differing 'shapes' of the two conditions across multiple axes (itch, pain, spread, etc.). (NO SVG/Mermaid used).
+             - Goal: Apply knowledge -> Method: Interactive Quiz (JS) -> Interaction: Button clicks, dynamic result reveal -> Justification: Active engagement aids retention and provides practical utility. -->
+        <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. Canvas used for chart. -->
+    </style>
+</head>
+<body class="bg-stone-50 text-slate-800">
+
+    <div class="max-w-4xl mx-auto px-4 py-8">
+        
+        <header class="text-center mb-10">
+            <h1 class="text-3xl md:text-4xl font-extrabold text-slate-900 mb-4 tracking-tight">「とびひ」か「ヘルペス」か？<br><span class="text-xl md:text-2xl font-normal text-slate-600 mt-2 block">症状と特徴で見分けるインタラクティブガイド</span></h1>
+            <p class="text-slate-600 max-w-2xl mx-auto mt-4">どちらも皮膚に水ぶくれ（水疱）ができる病気ですが、原因も治療法も全く異なります。このガイドで主な違いを確認してみましょう。<br><span class="text-xs text-red-500 font-bold">※最終的な診断と治療は必ず皮膚科などの医療機関を受診してください。</span></p>
+        </header>
+
+        <section class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mb-10">
+            <div class="p-6">
+                <h2 class="text-2xl font-bold mb-4 text-slate-800 border-b pb-2">1. 特徴を比較する</h2>
+                <p class="mb-6 text-sm text-slate-600">タブを切り替えて、文章による比較とグラフによる比較を確認してください。</p>
+                
+                <div class="flex border-b border-slate-200 mb-6">
+                    <button id="btn-tab-list" class="tab-btn active px-4 py-2 text-slate-600 hover:bg-slate-50 transition-colors focus:outline-none" onclick="switchTab('list')">一覧で比較 (表)</button>
+                    <button id="btn-tab-chart" class="tab-btn px-4 py-2 text-slate-600 hover:bg-slate-50 transition-colors focus:outline-none" onclick="switchTab('chart')">チャートで比較 (図)</button>
+                </div>
+
+                <div id="content-list" class="grid md:grid-cols-2 gap-6">
+                    
+                    <div class="bg-orange-50 border-l-4 border-orange-500 p-5 rounded-r-lg">
+                        <div class="flex items-center mb-3">
+                            <span class="text-2xl mr-2">🔥</span>
+                            <h3 class="text-xl font-bold text-orange-800">とびひ（伝染性膿痂疹）</h3>
+                        </div>
+                        <ul class="space-y-3 text-sm text-slate-700">
+                            <li><strong class="text-orange-700">原因:</strong> 細菌（黄色ブドウ球菌など）</li>
+                            <li><strong class="text-orange-700">始まりのサイン:</strong> 虫刺され、あせも、すり傷などを掻きこわす。</li>
+                            <li><strong class="text-orange-700">主な症状:</strong> じゅくじゅくした水疱、かさぶた。<strong class="font-bold underline">強いかゆみ</strong>。</li>
+                            <li><strong class="text-orange-700">広がり方:</strong> 触った手で別の場所を触ると、<strong class="font-bold">火事の飛び火のように次々と離れた場所にうつる</strong>。</li>
+                            <li><strong class="text-orange-700">好発時期/年齢:</strong> 夏場に多い。小児（子ども）に多い。</li>
+                            <li><strong class="text-orange-700">治療薬:</strong> 抗菌薬（抗生物質）の塗り薬・飲み薬。</li>
+                        </ul>
+                    </div>
+
+                    <div class="bg-blue-50 border-l-4 border-blue-500 p-5 rounded-r-lg">
+                        <div class="flex items-center mb-3">
+                            <span class="text-2xl mr-2">⚡</span>
+                            <h3 class="text-xl font-bold text-blue-800">ヘルペス（単純疱疹など）</h3>
+                        </div>
+                        <ul class="space-y-3 text-sm text-slate-700">
+                            <li><strong class="text-blue-700">原因:</strong> ウイルス（単純ヘルペスウイルスなど）</li>
+                            <li><strong class="text-blue-700">始まりのサイン:</strong> 疲労、ストレス、風邪などで免疫力が落ちた時。</li>
+                            <li><strong class="text-blue-700">主な症状:</strong> 水ぶくれができる前に<strong class="font-bold underline">ピリピリ、チクチクとした違和感や痛み</strong>がある。小さな水疱が密集する。</li>
+                            <li><strong class="text-blue-700">広がり方:</strong> とびひのように全身には広がりにくい。<strong class="font-bold">同じ場所（口唇など）に局所的にまとまってできる</strong>。再発を繰り返すことが多い。</li>
+                            <li><strong class="text-blue-700">好発時期/年齢:</strong> 季節を問わない。大人にも多い。</li>
+                            <li><strong class="text-blue-700">治療薬:</strong> 抗ウイルス薬の塗り薬・飲み薬。</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div id="content-chart" class="hidden-section w-full flex flex-col items-center">
+                    <p class="text-center text-sm text-slate-600 mb-4">両者の特徴の強さ（傾向）をレーダーチャートで比較しています。<br>面積の偏りの違いに注目してください。</p>
+                    <div class="chart-container">
+                        <canvas id="comparisonChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mb-10">
+            <div class="bg-slate-100 p-6 border-b border-slate-200">
+                <h2 class="text-2xl font-bold text-slate-800">2. 症状セルフチェックツール</h2>
+                <p class="text-sm text-slate-600 mt-2">現在の症状に最も近いものを選択していくと、どちらの可能性が高いか推測します。</p>
+            </div>
+            
+            <div class="p-6">
+                <div id="quiz-container" class="max-w-xl mx-auto">
+                    
+                    <div id="question-1" class="quiz-step block">
+                        <p class="font-bold text-lg mb-4 text-center">Q1. 最も気になる症状はどちらですか？</p>
+                        <div class="space-y-3">
+                            <button class="w-full text-left p-4 rounded-lg border border-slate-300 hover:border-orange-500 hover:bg-orange-50 transition-all focus:outline-none" onclick="answerQuestion(1, 'tobihi')">
+                                A. 強い「かゆみ」があり、じゅくじゅくしている。
+                            </button>
+                            <button class="w-full text-left p-4 rounded-lg border border-slate-300 hover:border-blue-500 hover:bg-blue-50 transition-all focus:outline-none" onclick="answerQuestion(1, 'herpes')">
+                                B. 水ぶくれの前に「ピリピリ」「チクチク」とした痛みや違和感があった。
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="question-2" class="quiz-step hidden-section">
+                        <p class="font-bold text-lg mb-4 text-center">Q2. 水ぶくれ（水疱）の広がり方は？</p>
+                        <div class="space-y-3">
+                            <button class="w-full text-left p-4 rounded-lg border border-slate-300 hover:border-orange-500 hover:bg-orange-50 transition-all focus:outline-none" onclick="answerQuestion(2, 'tobihi')">
+                                A. 掻いた手で別の場所を触ると、離れた場所にも次々と新しい水ぶくれができる。
+                            </button>
+                            <button class="w-full text-left p-4 rounded-lg border border-slate-300 hover:border-blue-500 hover:bg-blue-50 transition-all focus:outline-none" onclick="answerQuestion(2, 'herpes')">
+                                B. 唇の周りなど、特定の狭い範囲に小さな水ぶくれが密集してまとまっている。
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="question-3" class="quiz-step hidden-section">
+                        <p class="font-bold text-lg mb-4 text-center">Q3. 症状が出る前のきっかけや、現在の状況は？</p>
+                        <div class="space-y-3">
+                            <button class="w-full text-left p-4 rounded-lg border border-slate-300 hover:border-orange-500 hover:bg-orange-50 transition-all focus:outline-none" onclick="answerQuestion(3, 'tobihi')">
+                                A. 虫刺されやあせもを掻きこわしてしまった。（または、夏場で子どもである）
+                            </button>
+                            <button class="w-full text-left p-4 rounded-lg border border-slate-300 hover:border-blue-500 hover:bg-blue-50 transition-all focus:outline-none" onclick="answerQuestion(3, 'herpes')">
+                                B. 最近疲労がたまっていたり、風邪をひいたりした。（または、過去にも同じ場所にできたことがある）
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="result-screen" class="quiz-step hidden-section text-center py-6">
+                        <h3 class="text-xl font-bold mb-2">チェック結果</h3>
+                        <div id="result-box" class="p-6 rounded-xl mb-4 text-white font-bold text-2xl shadow-inner">
+                            <!-- JSで結果が入る -->
+                        </div>
+                        <p id="result-description" class="text-slate-700 mb-6 leading-relaxed">
+                            <!-- JSで解説が入る -->
+                        </p>
+                        <button class="px-6 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold rounded-full transition-colors focus:outline-none" onclick="resetQuiz()">もう一度チェックする</button>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <section class="mb-12">
+            <h2 class="text-2xl font-bold mb-4 text-slate-800">3. 対応と治療について（重要）</h2>
+            <div class="grid md:grid-cols-2 gap-4">
+                <div class="bg-white p-5 rounded-lg border border-slate-200 shadow-sm">
+                    <h3 class="font-bold text-lg text-slate-800 mb-2 border-b pb-1">共通して気をつけること</h3>
+                    <ul class="list-disc pl-5 space-y-1 text-slate-700 text-sm">
+                        <li><strong>患部を触らない・掻かない：</strong> 症状を悪化させたり、他人にうつしたりする原因になります。</li>
+                        <li><strong>タオルの共有を避ける：</strong> 家族間での感染を防ぐため、タオルは別々にしましょう。</li>
+                        <li><strong>手をよく洗う：</strong> 患部に触れてしまった場合は、石鹸でしっかり手を洗ってください。</li>
+                    </ul>
+                </div>
+                <div class="bg-red-50 p-5 rounded-lg border border-red-200 shadow-sm">
+                    <h3 class="font-bold text-lg text-red-800 mb-2 border-b border-red-200 pb-1">市販薬による自己判断の危険性</h3>
+                    <p class="text-slate-700 text-sm leading-relaxed">
+                        「とびひ（細菌）」と「ヘルペス（ウイルス）」では効く薬が全く異なります。<br>
+                        例えば、ヘルペスに対してステロイド剤（かゆみ止めなどによく含まれる）を塗ると、免疫が抑制されて症状が急激に悪化する恐れがあります。素人判断で手持ちの薬を塗らず、<strong>必ず皮膚科を受診して適切な処方薬を使用してください。</strong>
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <footer class="text-center text-sm text-slate-500 pb-8 pt-4 border-t border-slate-200">
+            <p>※本ツールは情報提供を目的としており、医学的な診断を行うものではありません。<br>疑わしい症状がある場合は、速やかに医療機関にご相談ください。</p>
+        </footer>
+
+    </div>
+
+    <script>
+        // --- Tab Logic ---
+        function switchTab(tabName) {
+            document.getElementById('btn-tab-list').classList.remove('active');
+            document.getElementById('btn-tab-chart').classList.remove('active');
+            document.getElementById('content-list').classList.add('hidden-section');
+            document.getElementById('content-chart').classList.add('hidden-section');
+
+            document.getElementById('btn-tab-' + tabName).classList.add('active');
+            document.getElementById('content-' + tabName).classList.remove('hidden-section');
+        }
+
+        // --- Chart.js Logic ---
+        const ctx = document.getElementById('comparisonChart').getContext('2d');
+        const comparisonChart = new Chart(ctx, {
+            type: 'radar',
+            data: {
+                labels: [
+                    'かゆみの強さ',
+                    '痛みの強さ (チクチク等)',
+                    '全身への広がりやすさ',
+                    '局所への密集度',
+                    '小児での発症率',
+                    '再発のしやすさ'
+                ],
+                datasets: [
+                    {
+                        label: 'とびひ',
+                        data: [5, 1, 5, 2, 5, 2], // 1-5 scale estimation
+                        backgroundColor: 'rgba(249, 115, 22, 0.2)', // Orange-500
+                        borderColor: 'rgba(249, 115, 22, 1)',
+                        pointBackgroundColor: 'rgba(249, 115, 22, 1)',
+                        borderWidth: 2
+                    },
+                    {
+                        label: 'ヘルペス',
+                        data: [2, 5, 1, 5, 2, 5],
+                        backgroundColor: 'rgba(59, 130, 246, 0.2)', // Blue-500
+                        borderColor: 'rgba(59, 130, 246, 1)',
+                        pointBackgroundColor: 'rgba(59, 130, 246, 1)',
+                        borderWidth: 2
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    r: {
+                        angleLines: { display: true },
+                        suggestedMin: 0,
+                        suggestedMax: 5,
+                        ticks: { display: false } // Hide numbers for cleaner look, relative shape is more important
+                    }
+                },
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.dataset.label + ': ' + (context.raw >= 4 ? '高い/強い' : context.raw <= 2 ? '低い/弱い' : '中程度');
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // --- Quiz Logic ---
+        let scores = { tobihi: 0, herpes: 0 };
+        let currentQuestion = 1;
+
+        function answerQuestion(qNum, type) {
+            scores[type]++;
+            
+            document.getElementById('question-' + qNum).classList.add('hidden-section');
+            
+            if (qNum < 3) {
+                currentQuestion++;
+                document.getElementById('question-' + currentQuestion).classList.remove('hidden-section');
+            } else {
+                showResult();
+            }
+        }
+
+        function showResult() {
+            const resultScreen = document.getElementById('result-screen');
+            const resultBox = document.getElementById('result-box');
+            const resultDesc = document.getElementById('result-description');
+            
+            resultScreen.classList.remove('hidden-section');
+
+            if (scores.tobihi > scores.herpes) {
+                resultBox.className = 'p-6 rounded-xl mb-4 text-white font-bold text-2xl shadow-inner bg-orange-500';
+                resultBox.innerHTML = '「とびひ」の可能性が高いパターンです';
+                resultDesc.innerHTML = 'かゆみが強く、触ったところから次々と広がっていくのは「とびひ」の典型的な特徴です。原因は細菌ですので、抗生物質の治療が必要です。これ以上広がらないように患部を触らず、早めに皮膚科を受診してください。';
+            } else if (scores.herpes > scores.tobihi) {
+                resultBox.className = 'p-6 rounded-xl mb-4 text-white font-bold text-2xl shadow-inner bg-blue-500';
+                resultBox.innerHTML = '「ヘルペス」の可能性が高いパターンです';
+                resultDesc.innerHTML = '水ぶくれの前にピリピリとした痛みがあり、同じ場所にまとまってできるのは「ヘルペス」の典型的な特徴です。原因はウイルスですので、抗ウイルス薬による治療が必要です。疲労がたまっているサインでもあるので、休養を取りつつ皮膚科を受診してください。';
+            } else {
+                resultBox.className = 'p-6 rounded-xl mb-4 text-slate-800 font-bold text-2xl shadow-inner bg-slate-200 border border-slate-300';
+                resultBox.innerHTML = '特徴が混在しています';
+                resultDesc.innerHTML = '両方の特徴が混ざっている、あるいは別の皮膚疾患（帯状疱疹、接触性皮膚炎など）の可能性もあります。自己判断での処置は症状を悪化させるリスクがあるため、何も塗らずに早急に皮膚科を受診して医師の診断を受けてください。';
+            }
+        }
+
+        function resetQuiz() {
+            scores = { tobihi: 0, herpes: 0 };
+            currentQuestion = 1;
+            
+            document.getElementById('result-screen').classList.add('hidden-section');
+            
+            for(let i=1; i<=3; i++) {
+                document.getElementById('question-' + i).classList.add('hidden-section');
+            }
+            
+            document.getElementById('question-1').classList.remove('hidden-section');
+        }
+
+    </script>
+</body>
+</html>
